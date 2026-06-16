@@ -1,0 +1,30 @@
+# ML / CV dependencies for manga-translator pipeline
+# PyTorch CPU version (override for GPU via docker-compose.gpu.yml)
+torch>=2.2.0 --index-url https://download.pytorch.org/whl/cpu
+torchvision>=0.17.0 --index-url https://download.pytorch.org/whl/cpu
+
+numpy>=1.26.0
+opencv-python>=4.9.0
+Pillow>=10.4.0
+scipy>=1.12.0
+scikit-image>=0.22.0
+
+# Deep learning utilities
+einops>=0.7.0
+timm>=0.9.0
+omegaconf>=2.3.0
+safetensors>=0.4.0
+
+# Text detection / OCR
+shapely>=2.0.0
+pyclipper>=1.3.0
+
+# Translation APIs
+httpx>=0.27.0
+aiohttp>=3.9.0
+
+# Optional: manga-ocr
+# manga-ocr>=0.1.0
+
+# Optional: colorization
+# onnxruntime>=1.17.0

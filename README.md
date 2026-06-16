@@ -1,89 +1,90 @@
-# Manga/Image Translator (English Readme)
-Last Updated: 2025/05/10
+# Manga Translator — All-in-One Web App
+
+> One-click translation of manga/comic images with an integrated web interface.
+
+This project packages the [manga-image-translator](https://github.com/zyddnys/manga-image-translator) engine into a single-container web application with a modern React frontend and FastAPI backend.
+
+## Project Structure
+
+```
+manga-translator/
+├── webapp/                    <- All-in-one web application
+│   ├── backend/               <- FastAPI + manga_translator engine + fonts + dicts
+│   │   ├── app/               <- API routes, models, services
+│   │   ├── manga_translator/  <- Core translation engine
+│   │   ├── fonts/             <- Render fonts
+│   │   ├── data/dict/         <- Translation dictionaries
+│   │   └── tests/             <- Pytest suite
+│   └── frontend/              <- React 19 + Vite + Tailwind SPA
+│       └── src/pages/         <- Setup, Login, Dashboard, Upload,
+│                                 Collections, Gallery, Jobs, Settings
+├── _archive/                  <- Old replaced components (server, front, desktop, etc.)
+└── README.md
+```
+
+## Quick Start
+
+### Backend
+
+```bash
+cd webapp/backend
+pip install -r requirements.txt
+python -m app.main
+```
+
+The API runs on `http://localhost:8000`:
+- API routes under `/api/*`
+- Built SPA served at `/`
+- Storage files at `/storage/*`
+
+### Frontend (Dev Mode)
+
+```bash
+cd webapp/frontend
+npm install
+npm run dev
+```
+
+Vite dev server runs on `http://localhost:5173` with a proxy to the backend.
+
+### Build for Production
+
+```bash
+cd webapp/frontend
+npm run build
+```
+
+This outputs to `webapp/backend/app/static/`, which FastAPI serves automatically.
+
+## Testing
+
+```bash
+cd webapp/backend
+python -m pytest tests -v
+```
+
+Tests cover:
+- Auth (setup wizard, login/logout, token refresh)
+- Collections CRUD
+- Uploads with deduplication
+- Job creation, cancel, retry
+- Settings persistence
+
+## Features
+
+- **Single-admin auth**: Setup wizard on first run, JWT via httpOnly cookies
+- **Upload & organize**: Drag-drop images into collections
+- **Batch translation**: Queue jobs per-collection with target language selection
+- **Gallery & export**: Browse results, select assets, export as ZIP
+- **Settings**: Persistent backend settings for defaults and retention
+
+## Original Project
+
+The core `manga_translator/` engine is preserved from the upstream project. See `_archive/` for the original CLI tools, desktop GUI, and standalone server.
+
 ---
-![Commit activity](https://img.shields.io/github/commit-activity/m/zyddnys/manga-image-translator)
-![Lines of code](https://img.shields.io/tokei/lines/github/zyddnys/manga-image-translator?label=lines%20of%20code)
-![License](https://img.shields.io/github/license/zyddnys/manga-image-translator)
-![Contributors](https://img.shields.io/github/contributors/zyddnys/manga-image-translator)
-[![Discord](https://img.shields.io/discord/739305951085199490?logo=discord&label=discord&logoColor=white)](https://discord.gg/Ak8APNy4vb)
 
-
-> One-click translation of text in various images\
-> [中文说明](README_CN.md) | [Changelog](CHANGELOG_CN.md) \
-> Welcome to join our Discord <https://discord.gg/Ak8APNy4vb>
-
-This project aims to translate images that are unlikely to be professionally translated, such as comics/images on various group chats and image boards, making it possible for Japanese novices like me to understand the content.
-It mainly supports Japanese, but also supports Simplified and Traditional Chinese, English and 20 other minor languages.
-Supports image repair (text removal) and typesetting.
-This project is v2 of [Qiú wén zhuǎn yì zhì](https://github.com/PatchyVideo/MMDOCR-HighPerformance).
-
-**Note: This project is still in the early stages of development and has many shortcomings. We need your help to improve it!**
-
-
-## 📂 Directory
-
-*   [Showcase](#showcase)
-*   [Online Version](#online-version)
-*   [Rust Version](#rust-version)
-*   [Installation](#installation)
-    *   [Local Setup](#local-setup)
-        *   [Using Pip/venv (Recommended)](#using-pipvenv-recommended)
-        *   [Notes for Windows Users](#notes-for-windows-users)
-    *   [Docker](#docker)
-        *   [Run Web Server](#run-web-server)
-            *   [Using Nvidia GPU](#using-nvidia-gpu)
-        *   [Use as CLI](#use-as-cli)
-        *   [Build Locally](#build-locally)
-*   [Usage](#usage)
-    *   [Local (Batch) Mode](#local-batch-mode)
-    *   [Web Mode](#web-mode)
-        *   [Old UI](#old-ui)
-        *   [New UI](#new-ui)
-    *   [API Mode](#api-mode)
-        *   [API Documentation](#api-documentation)
-    *   [Config-help Mode](#config-help-mode)
-*   [Option and Configuration](#option-and-configuration)
-    *   [Recommended Options](#recommended-options)
-        *   [Tips to Improve Translation Quality](#tips-to-improve-translation-quality)
-    *   [Command Line Options](#command-line-options)
-        *   [Basic Options](#basic-options)
-        *   [Additional Options](#additional-options)
-            *   [Local Mode Options](#local-mode-options)
-            *   [WebSocket Mode Options](#websocket-mode-options)
-            *   [API Mode Options](#api-mode-options)
-            *   [Web Mode Options](#web-mode-options-missing-some-basic-options-still-needs-to-be-added)
-    *   [Configuration File](#configuration-file)
-        *   [Render Options](#render-options)
-        *   [Upscale Options](#upscale-options)
-        *   [Translator Options](#translator-options)
-        *   [Detector Options](#detector-options)
-        *   [Inpainter Options](#inpainter-options)
-        *   [Colorizer Options](#colorizer-options)
-        *   [OCR Options](#ocr-options)
-        *   [Other Options](#other-options)
-    *   [Language Code Reference](#language-code-reference)
-    *   [Translator Reference](#translator-reference)
-    *   [Glossary](#glossary)
-    *   [Replacement Dictionary](#replacement-dictionary)
-    *   [Environment Variables Summary](#environment-variables-summary)
-    *   [GPT Configuration Reference](#gpt-configuration-reference)
-    *   [Rendering with Gimp](#rendering-with-gimp)
-*   [Future Plans](#future-plans)
-*   [Support Us](#support-us)
-    *   [Thanks to all contributors](#thanks-to-all-contributors)
-*   [Star Growth Curve](#star-growth-curve)
-
-## Showcase
-
-The following examples may not be frequently updated and may not represent the effect of the current main branch version.
-
-<table>
-  <thead>
-    <tr>
-      <th align="center" width="50%">Original Image</th>
-      <th align="center" width="50%">Translated Image</th>
-    </tr>
-  </thead>
+*Legacy README content preserved in the git history.*
   <tbody>
     <tr>
       <td align="center" width="50%">

@@ -51,3 +51,11 @@ MANIFEST
 # SSL Used for running server locally
 cert.pem
 key.pem
+
+# Archived old code
+_archive/
+
+# Webapp build artifacts
+webapp/backend/app/static/
+webapp/frontend/node_modules/
+webapp/frontend/dist/

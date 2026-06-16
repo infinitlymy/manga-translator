@@ -1,0 +1,53 @@
+# GPU variant: CUDA 12.1 base with PyTorch GPU
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS backend
+WORKDIR /app
+
+# Install Python and system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3-pip \
+    libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev libgomp1 \
+    git wget curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/python3.11 /usr/bin/python
+
+# Copy backend dependencies
+COPY backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install GPU PyTorch (CUDA 12.1)
+RUN pip install --no-cache-dir \
+    torch>=2.2.0 torchvision>=0.17.0 \
+    --index-url https://download.pytorch.org/whl/cu121
+
+# Copy ML deps (skip torch since we installed GPU version above)
+COPY backend/requirements-ml.txt ./
+RUN grep -v "torch" requirements-ml.txt > requirements-ml-no-torch.txt \
+    && pip install --no-cache-dir -r requirements-ml-no-torch.txt \
+    && rm requirements-ml-no-torch.txt
+
+# Copy backend source
+COPY backend/ ./
+
+# Build frontend
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm ci && cd ..
+COPY frontend/ ./frontend/
+RUN cd frontend && npm run build && cd ..
+RUN cp -r frontend/dist ./app/static
+
+# Environment
+ENV PYTHONPATH=/app
+ENV APP_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=8000
+ENV CUDA_VISIBLE_DEVICES=0
+
+EXPOSE 8000
+
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
